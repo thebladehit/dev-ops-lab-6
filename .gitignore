@@ -1,0 +1,5 @@
+src/MapClient/node_modules
+src/CommunicationControl/.idea
+bin
+obj
+Logs
