@@ -3,3 +3,4 @@ src/CommunicationControl/.idea
 bin
 obj
 Logs
+.vscode
