@@ -1,6 +1,7 @@
 ﻿using DevOpsProject.CommunicationControl.Logic.Services.Interfaces;
 using DevOpsProject.Shared.Clients;
 using DevOpsProject.Shared.Configuration;
+using DevOpsProject.Shared.Enums;
 using DevOpsProject.Shared.Exceptions;
 using DevOpsProject.Shared.Messages;
 using DevOpsProject.Shared.Models;
@@ -15,11 +16,12 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
         private readonly IRedisKeyValueService _redisService;
         private readonly RedisKeys _redisKeys;
         private readonly IPublishService _messageBus;
-        private readonly HiveHttpClient _hiveHttpClient;
+        private readonly CommunicationControlHttpClient _hiveHttpClient;
         private readonly ILogger<CommunicationControlService> _logger;
+        private readonly IOptionsMonitor<ComControlCommunicationConfiguration> _communicationControlConfiguration;
 
         public CommunicationControlService(ISpatialService spatialService, IRedisKeyValueService redisService, IOptionsSnapshot<RedisKeys> redisKeysSnapshot, 
-            IPublishService messageBus, HiveHttpClient hiveHttpClient, ILogger<CommunicationControlService> logger)
+            IPublishService messageBus, CommunicationControlHttpClient hiveHttpClient, ILogger<CommunicationControlService> logger, IOptionsMonitor<ComControlCommunicationConfiguration> communicationControlConfiguration)
         {
             _spatialService = spatialService;
             _redisService = redisService;
@@ -27,6 +29,7 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
             _messageBus = messageBus;
             _hiveHttpClient = hiveHttpClient;
             _logger = logger;
+            _communicationControlConfiguration = communicationControlConfiguration;
         }
 
         public async Task<bool> DisconnectHive(string hiveId)
@@ -65,7 +68,7 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
             bool result = await _redisService.SetAsync(GetHiveKey(model.HiveID), model);
             if (result)
             {
-                var operationalArea = await _spatialService.GetHiveOperationalArea(model);
+                var operationalArea = _spatialService.GetHiveOperationalArea(model);
                 await _messageBus.Publish(new HiveConnectedMessage
                 {
                     HiveID = model.HiveID,
@@ -119,7 +122,7 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
 
         }
 
-        public async Task<string?> SendHiveControlSignal(string hiveId, Location destination)
+        public async Task<string> SendHiveControlSignal(string hiveId, Location destination)
         {
             var hive = await GetHiveModel(hiveId);
             if (hive == null)
@@ -131,8 +134,15 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
 
             try
             {
-                // TODO: Schema can be moved to appsettings
-                var result = await _hiveHttpClient.SendHiveControlCommandAsync("http", hive.HiveIP, hive.HivePort, destination);
+                var command = new MoveHiveMindCommand
+                {
+                    CommandType = State.Move,
+                    Location = destination,
+                    Timestamp = DateTime.Now
+                };
+
+                var result = await _hiveHttpClient.SendHiveControlCommandAsync(_communicationControlConfiguration.CurrentValue.RequestScheme,
+                    hive.HiveIP, hive.HivePort, _communicationControlConfiguration.CurrentValue.HiveMindPath, command);
                 isSuccessfullySent = true;
                 return result;
             }

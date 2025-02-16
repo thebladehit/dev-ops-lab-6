@@ -12,6 +12,8 @@ import { Style, Icon, Text, Fill, Stroke } from "ol/style";
 import Popup from "./Popup";
 import { fetchCenterCoordinates, fetchHives, moveHives } from "../api/mapService";
 
+// TEST STAGING
+
 // TODO: Hardcoded marker icon path
 const MARKER_ICON_URL = "/256x256.png";
 
@@ -32,7 +34,7 @@ const MapView = () => {
             try {
                 const center = await fetchCenterCoordinates();
                 if (center) {
-                    initMap(center.latitude, center.longitude);
+                    initMap(center.Latitude, center.Longitude);
                     await fetchAndDrawHives();
                 }
 

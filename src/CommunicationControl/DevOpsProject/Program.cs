@@ -1,8 +1,11 @@
+using Asp.Versioning;
 using DevOpsProject.CommunicationControl.API.DI;
 using DevOpsProject.CommunicationControl.API.Middleware;
 using DevOpsProject.Shared.Clients;
+using DevOpsProject.Shared.Configuration;
 using DevOpsProject.Shared.Models;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -18,10 +21,31 @@ internal class Program
                         .ReadFrom.Services(services)
                         .Enrich.FromLogContext());
 
-        builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+            options.ApiVersionReader = ApiVersionReader.Combine(
+                new UrlSegmentApiVersionReader(),
+                new HeaderApiVersionReader("X-Api-Version")
+            );
+        }).AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+        });
+
+        // TODO: consider this approach
+        builder.Services.AddControllers().AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        });        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "CommunicationControl - V1", Version = "v1.0" });
+        });
 
         // TODO: LATER - ADD OpenTelemtry
 
@@ -29,13 +53,12 @@ internal class Program
         builder.Services.AddCommunicationControlLogic();
 
         builder.Services.Configure<OperationalAreaConfig>(builder.Configuration.GetSection("OperationalArea"));
-        builder.Services.AddSingleton<IOptionsMonitor<OperationalAreaConfig>, OptionsMonitor<OperationalAreaConfig>>();
-
+        builder.Services.Configure<ComControlCommunicationConfiguration>(builder.Configuration.GetSection("CommunicationConfiguration"));
         
         var hiveRetryPolicy = HttpPolicyExtensions
             .HandleTransientHttpError()
             .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
-        builder.Services.AddHttpClient<HiveHttpClient>()
+        builder.Services.AddHttpClient<CommunicationControlHttpClient>()
             .AddPolicyHandler(hiveRetryPolicy);
 
 

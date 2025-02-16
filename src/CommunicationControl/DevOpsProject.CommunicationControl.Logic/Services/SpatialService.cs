@@ -13,7 +13,7 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
             _operationalAreaConfig = operationalAreaConfig;
         }
 
-        public async Task<HiveOperationalArea> GetHiveOperationalArea(HiveModel hiveModel)
+        public HiveOperationalArea GetHiveOperationalArea(HiveModel hiveModel)
         {
             var operationalArea = new HiveOperationalArea
             {
