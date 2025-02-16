@@ -4,6 +4,6 @@ namespace DevOpsProject.CommunicationControl.Logic.Services.Interfaces
 {
     public interface ISpatialService
     {
-        Task<HiveOperationalArea> GetHiveOperationalArea(HiveModel hiveModel);
+        HiveOperationalArea GetHiveOperationalArea(HiveModel hiveModel);
     }
 }

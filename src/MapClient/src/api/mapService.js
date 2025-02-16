@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080/api/client";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Fetch the center coordinates for the initial map load
 export const fetchCenterCoordinates = async () => {
@@ -19,9 +19,9 @@ export const fetchHives = async () => {
         const response = await axios.get(`${API_BASE_URL}/hive`);
 
         return response.data.map(hive => ({
-            id: hive.hiveID,
-            lat: hive.telemetry?.location?.latitude ?? null,
-            lon: hive.telemetry?.location?.longitude ?? null,
+            id: hive.HiveID,
+            lat: hive.Telemetry?.Location?.Latitude ?? null,
+            lon: hive.Telemetry?.Location?.Longitude ?? null,
         })).filter(hive => hive.lat !== null && hive.lon !== null); // Remove invalid locations
 
     } catch (error) {

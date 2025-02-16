@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevOpsProject.Shared", "Dev
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevOpsProject.Example.MessageListener", "DevOpsProject.Example.MessageListener\DevOpsProject.Example.MessageListener.csproj", "{CBB302CE-D22A-4DA0-8811-E4F8FDFC1C4B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevOpsProject.HiveMind.API", "DevOpsProject.HiveMind.API\DevOpsProject.HiveMind.API.csproj", "{65F5C602-86C3-4653-B3B4-326FC2D01B8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevOpsProject.HiveMind.Logic", "DevOpsProject.HiveMind.Logic\DevOpsProject.HiveMind.Logic.csproj", "{83D3A1EA-64FE-407C-AB3A-A35CC2C9F8EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{CBB302CE-D22A-4DA0-8811-E4F8FDFC1C4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBB302CE-D22A-4DA0-8811-E4F8FDFC1C4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBB302CE-D22A-4DA0-8811-E4F8FDFC1C4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65F5C602-86C3-4653-B3B4-326FC2D01B8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65F5C602-86C3-4653-B3B4-326FC2D01B8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65F5C602-86C3-4653-B3B4-326FC2D01B8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65F5C602-86C3-4653-B3B4-326FC2D01B8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83D3A1EA-64FE-407C-AB3A-A35CC2C9F8EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83D3A1EA-64FE-407C-AB3A-A35CC2C9F8EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83D3A1EA-64FE-407C-AB3A-A35CC2C9F8EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83D3A1EA-64FE-407C-AB3A-A35CC2C9F8EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

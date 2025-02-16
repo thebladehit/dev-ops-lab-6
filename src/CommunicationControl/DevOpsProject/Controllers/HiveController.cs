@@ -1,13 +1,13 @@
-﻿using DevOpsProject.CommunicationControl.API.DTO.Hive.Request;
-using DevOpsProject.CommunicationControl.API.DTO.Hive.Response;
+﻿using Asp.Versioning;
 using DevOpsProject.CommunicationControl.Logic.Services.Interfaces;
 using DevOpsProject.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevOpsProject.CommunicationControl.API.Controllers
 {
+    [ApiVersion("1.0")]
     [ApiController]
-    [Route("api/hive")]
+    [Route("api/v{version:apiVersion}/hive")]
     public class HiveController : Controller
     {
         private readonly ICommunicationControlService _communicationControlService;
