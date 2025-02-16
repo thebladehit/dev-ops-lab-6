@@ -1,11 +1,20 @@
 # Hive Emulator
 
+- [Hive Emulator](#hive-emulator)
+  - [About](#about)
+  - [Installation](#installation)
+    - [Redis](#redis)
+    - [Map Component](#map-component)
+    - [Communiction Control](#communiction-control)
+    - [Hive Mind](#hive-mind)
+  - [Usage](#usage)
+
 ## About
 This is a demo project used in the Uni DevOps course
 
 ## Installation
 
-### Run Redis
+### Redis
 ```bash
 docker run --name redis -d -p 6379:6379 redis
 ```
@@ -23,8 +32,16 @@ npm run dev
 ```bash
 cd src/CommunicationControl
 
-dotnet build  DevOpsProject/
+dotnet run  --project DevOpsProject/DevOpsProject.CommunicationControl.API.csproj
 ```
+
+### Hive Mind
+```bash
+cd src/CommunicationControl
+
+dotnet run  --project DevOpsProject/DevOpsProject.HiveMind.API.csproj
+```
+
 
 ## Usage
 
