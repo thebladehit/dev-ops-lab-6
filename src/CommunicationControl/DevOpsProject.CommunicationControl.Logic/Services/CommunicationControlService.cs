@@ -141,8 +141,8 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
                     Timestamp = DateTime.Now
                 };
 
-                var result = await _hiveHttpClient.SendHiveControlCommandAsync(_communicationControlConfiguration.CurrentValue.RequestScheme,
-                    hive.HiveIP, hive.HivePort, _communicationControlConfiguration.CurrentValue.HiveMindPath, command);
+                var result = await _hiveHttpClient.SendHiveControlCommandAsync(hive.HiveSchema, hive.HiveIP, hive.HivePort, 
+                    _communicationControlConfiguration.CurrentValue.HiveMindPath, command);
                 isSuccessfullySent = true;
                 return result;
             }

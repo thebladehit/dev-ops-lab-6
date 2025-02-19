@@ -31,6 +31,7 @@ namespace DevOpsProject.HiveMind.Logic.Services
         {
             var request = new HiveConnectRequest
             {
+                HiveSchema = _communicationConfigurationOptions.RequestSchema,
                 HiveIP = _communicationConfigurationOptions.HiveIP,
                 HivePort = _communicationConfigurationOptions.HivePort,
                 HiveID = _communicationConfigurationOptions.HiveID
@@ -68,7 +69,6 @@ namespace DevOpsProject.HiveMind.Logic.Services
                     HiveInMemoryState.OperationalArea = hiveConnectResponse.OperationalArea;
                     HiveInMemoryState.CurrentLocation = _communicationConfigurationOptions.InitialLocation;
 
-                    // HERE - we are starting to send telemetry
                     StartTelemetry();
                 }
                 else
@@ -80,7 +80,7 @@ namespace DevOpsProject.HiveMind.Logic.Services
             else
             {
                 _logger.LogError($"Failed to connect hive, terminating process");
-                System.Diagnostics.Process.GetCurrentProcess().Kill();
+                Environment.Exit(1);
             }
 
         }

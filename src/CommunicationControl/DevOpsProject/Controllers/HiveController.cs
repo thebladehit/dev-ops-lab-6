@@ -25,6 +25,7 @@ namespace DevOpsProject.CommunicationControl.API.Controllers
                 HiveID = request.HiveID,
                 HiveIP = request.HiveIP,
                 HivePort = request.HivePort,
+                HiveSchema = request.HiveSchema
             };
 
             var hiveOperationalArea = await _communicationControlService.ConnectHive(hiveModel);
