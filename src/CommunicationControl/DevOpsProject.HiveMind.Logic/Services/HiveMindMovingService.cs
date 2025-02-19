@@ -27,6 +27,7 @@ namespace DevOpsProject.HiveMind.Logic.Services
                 // If already moving - stop movement
                 if (HiveInMemoryState.IsMoving)
                 {
+                    _logger.LogWarning("Previous movement command terminated. Previous destination: {@destination}, Current Location: {@current}, new destination: {@destination}", HiveInMemoryState.Destination, HiveInMemoryState.CurrentLocation, destination);
                     StopMovement();
                 }
 
@@ -39,8 +40,9 @@ namespace DevOpsProject.HiveMind.Logic.Services
                 if (_movementTimer == null)
                 {
                     // TODO: Recalculating position each N seconds
-                    _movementTimer = new Timer(UpdateMovement, null, TimeSpan.Zero, TimeSpan.FromSeconds(3));
-                    _logger.LogInformation("Movement timer started.");
+                    int intervalFromSeconds = 3;
+                    _movementTimer = new Timer(UpdateMovement, null, TimeSpan.Zero, TimeSpan.FromSeconds(intervalFromSeconds));
+                    _logger.LogInformation("Movement timer started. Destination: {@destination}, recalculation interval: {interval}", destination, intervalFromSeconds);
                 }
             }
         }
@@ -60,14 +62,13 @@ namespace DevOpsProject.HiveMind.Logic.Services
 
                 if (AreLocationsEqual(currentLocation.Value, destination.Value))
                 {
+                    _logger.LogInformation("Reached destination. Current location: {@currentLocation}, Destination: {@destination}", currentLocation, destination);
                     StopMovement();
                     return;
                 }
 
                 Location newLocation = CalculateNextPosition(currentLocation.Value, destination.Value, 0.1f);
                 HiveInMemoryState.CurrentLocation = newLocation;
-
-                _logger.LogInformation($"Moved closer: {newLocation}");
             }
         }
 
@@ -77,7 +78,6 @@ namespace DevOpsProject.HiveMind.Logic.Services
             _movementTimer = null;
             HiveInMemoryState.IsMoving = false;
             HiveInMemoryState.Destination = null;
-            _logger.LogInformation("Movement stopped: Reached destination.");
         }
 
         private static bool AreLocationsEqual(Location loc1, Location loc2)

@@ -48,6 +48,8 @@ namespace DevOpsProject.HiveMind.Logic.Services
             };
             var jsonContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
 
+            _logger.LogInformation("Attempting to connect Hive. Request: {@request}, URI: {uri}", request, uriBuilder.Uri);
+
             var retryPolicy = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                 .WaitAndRetryAsync(
                     10,
