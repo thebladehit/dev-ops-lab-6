@@ -1,13 +1,6 @@
-using Asp.Versioning;
 using DevOpsProject.CommunicationControl.API.DI;
 using DevOpsProject.CommunicationControl.API.Middleware;
-using DevOpsProject.Shared.Clients;
-using DevOpsProject.Shared.Configuration;
-using DevOpsProject.Shared.Models;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using Polly;
-using Polly.Extensions.Http;
 using Serilog;
 
 internal class Program
@@ -21,26 +14,11 @@ internal class Program
                         .ReadFrom.Services(services)
                         .Enrich.FromLogContext());
 
-        builder.Services.AddApiVersioning(options =>
-        {
-            options.DefaultApiVersion = new ApiVersion(1, 0);
-            options.AssumeDefaultVersionWhenUnspecified = true;
-            options.ReportApiVersions = true;
-            options.ApiVersionReader = ApiVersionReader.Combine(
-                new UrlSegmentApiVersionReader(),
-                new HeaderApiVersionReader("X-Api-Version")
-            );
-        }).AddApiExplorer(options =>
-        {
-            options.GroupNameFormat = "'v'VVV";
-            options.SubstituteApiVersionInUrl = true;
-        });
+        builder.Services.AddApiVersioningConfiguration();
 
         // TODO: consider this approach
-        builder.Services.AddControllers().AddJsonOptions(options =>
-        {
-            options.JsonSerializerOptions.PropertyNamingPolicy = null;
-        });        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddJsonControllerOptionsConfiguration();
+
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
         {
@@ -52,36 +30,12 @@ internal class Program
         builder.Services.AddRedis(builder.Configuration);
         builder.Services.AddCommunicationControlLogic();
 
-        builder.Services.Configure<OperationalAreaConfig>(builder.Configuration.GetSection("OperationalArea"));
-        builder.Services.Configure<ComControlCommunicationConfiguration>(builder.Configuration.GetSection("CommunicationConfiguration"));
-        
-        var hiveRetryPolicy = HttpPolicyExtensions
-            .HandleTransientHttpError()
-            .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
-        builder.Services.AddHttpClient<CommunicationControlHttpClient>()
-            .AddPolicyHandler(hiveRetryPolicy);
+        builder.Services.AddOptionsConfiguration(builder.Configuration);
 
+        builder.Services.AddHttpClientsConfiguration();
 
         var corsPolicyName = "AllowReactApp";
-        var localCorsPolicyName = "AllowLocalHtml";
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy(name: corsPolicyName,
-                policy =>
-                {
-                    policy.AllowAnyOrigin() //SECURITY WARNING ! Never allow all origins
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                });
-
-            options.AddPolicy(name: localCorsPolicyName,
-                policy =>
-                {
-                    policy.AllowAnyOrigin() //SECURITY WARNING ! Never allow all origins
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                });
-        });
+        builder.Services.AddCorsConfiguration(corsPolicyName);
 
         builder.Services.AddExceptionHandler<ExceptionHandlingMiddleware>();
         builder.Services.AddProblemDetails();
@@ -97,7 +51,6 @@ internal class Program
         }
 
         app.UseCors(corsPolicyName);
-        //app.UseCors(localCorsPolicyName);
 
         app.UseAuthorization();
 

@@ -32,17 +32,21 @@ namespace DevOpsProject.CommunicationControl.API.Controllers
         [HttpGet("hive/{hiveId}")]
         public async Task<IActionResult> GetHive(string hiveId)
         {
-            var hiveModel = await _communicationControlService.GetHiveModel(hiveId);
+            var hiveExists = await _communicationControlService.IsHiveConnected(hiveId);
+            if (!hiveExists)
+            {
+                _logger.LogWarning("Failed to get Hive for HiveID: {hiveId}", hiveId);
+                return NotFound($"Hive with HiveID: {hiveId} is not found");
+            }
 
+            var hiveModel = await _communicationControlService.GetHiveModel(hiveId);
             return Ok(hiveModel);
         }
 
         [HttpGet("hive")]
         public async Task<IActionResult> GetHives()
         {
-
             var hives = await _communicationControlService.GetAllHives();
-
             return Ok(hives);
         }
 
@@ -59,6 +63,7 @@ namespace DevOpsProject.CommunicationControl.API.Controllers
             if (request?.Hives == null || !request.Hives.Any())
                 return BadRequest("No hive IDs provided.");
 
+            _logger.LogInformation("Hive moving request accepted by enpdoint. Request: {@request}", request);
             foreach (var id in request.Hives)
             {
                 _ = Task.Run(async () =>
@@ -69,7 +74,7 @@ namespace DevOpsProject.CommunicationControl.API.Controllers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"Failed to send control signal for HiveID: {id}");
+                        _logger.LogError(ex, "Failed to send control signal for HiveID: {id} \n Request: {@request}", id, request);
                     }
                 });
             }

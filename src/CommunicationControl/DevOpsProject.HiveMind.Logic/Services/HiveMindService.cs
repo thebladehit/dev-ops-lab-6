@@ -31,6 +31,7 @@ namespace DevOpsProject.HiveMind.Logic.Services
         {
             var request = new HiveConnectRequest
             {
+                HiveSchema = _communicationConfigurationOptions.RequestSchema,
                 HiveIP = _communicationConfigurationOptions.HiveIP,
                 HivePort = _communicationConfigurationOptions.HivePort,
                 HiveID = _communicationConfigurationOptions.HiveID
@@ -46,6 +47,8 @@ namespace DevOpsProject.HiveMind.Logic.Services
                 Path = $"{_communicationConfigurationOptions.CommunicationControlPath}/connect"
             };
             var jsonContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+
+            _logger.LogInformation("Attempting to connect Hive. Request: {@request}, URI: {uri}", request, uriBuilder.Uri);
 
             var retryPolicy = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                 .WaitAndRetryAsync(
@@ -68,7 +71,6 @@ namespace DevOpsProject.HiveMind.Logic.Services
                     HiveInMemoryState.OperationalArea = hiveConnectResponse.OperationalArea;
                     HiveInMemoryState.CurrentLocation = _communicationConfigurationOptions.InitialLocation;
 
-                    // HERE - we are starting to send telemetry
                     StartTelemetry();
                 }
                 else
@@ -80,7 +82,7 @@ namespace DevOpsProject.HiveMind.Logic.Services
             else
             {
                 _logger.LogError($"Failed to connect hive, terminating process");
-                System.Diagnostics.Process.GetCurrentProcess().Kill();
+                Environment.Exit(1);
             }
 
         }

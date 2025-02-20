@@ -12,7 +12,5 @@ namespace DevOpsProject.CommunicationControl.API.DI
 
             return serviceCollection;
         }
-
-        
     }
 }

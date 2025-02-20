@@ -37,7 +37,7 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
             bool isSuccessfullyDisconnected = false;
             try
             {
-                var result = await _redisService.DeleteAsync(hiveId);
+                var result = await _redisService.DeleteAsync(GetHiveKey(hiveId));
                 isSuccessfullyDisconnected = result;
                 return result;
             }
@@ -65,9 +65,11 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
 
         public async Task<HiveOperationalArea> ConnectHive(HiveModel model)
         {
+            _logger.LogInformation("Trying to connect Hive: {@model}", model);
             bool result = await _redisService.SetAsync(GetHiveKey(model.HiveID), model);
             if (result)
             {
+                _logger.LogInformation("Successfully connected Hive: {@model}", model);
                 var operationalArea = _spatialService.GetHiveOperationalArea(model);
                 await _messageBus.Publish(new HiveConnectedMessage
                 {
@@ -80,46 +82,41 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
             }
             else
             {
-                await _messageBus.Publish(new HiveConnectedMessage
-                {
-                    HiveID = model.HiveID,
-                    Hive = model,
-                    IsSuccessfullyConnected = result
-                });
+                _logger.LogError("Failed to connect Hive: {@model}", model);
                 throw new HiveConnectionException($"Failed to connect hive for HiveId: {model.HiveID}");
             }
+        }
+
+        public async Task<bool> IsHiveConnected(string hiveId)
+        {
+            string hiveKey = GetHiveKey(hiveId);
+            return await _redisService.CheckIfKeyExists(hiveKey);
         }
 
         public async Task<DateTime> AddTelemetry(HiveTelemetryModel model)
         {
             string hiveKey = GetHiveKey(model.HiveID);
-            bool hiveExists = await _redisService.CheckIfKeyExists(hiveKey);
-            if (hiveExists)
+            bool result = await _redisService.UpdateAsync(hiveKey, (HiveModel hive) =>
             {
-                bool result = await _redisService.UpdateAsync(hiveKey, (HiveModel hive) =>
-                {
-                    hive.Telemetry = model;
-                });
+                hive.Telemetry = model;
+            });
 
-                await _messageBus.Publish(new TelemetrySentMessage
-                {
-                    HiveID = model.HiveID,
-                    Telemetry = model,
-                    IsSuccessfullySent = result
-                });
-                return model.Timestamp;
+            if (result)
+            {
+                _logger.LogInformation("Telemetry updated for HiveID: {hiveId}. Updated telemetry timestamp: {timestamp}", model.HiveID, model.Timestamp);
             }
             else
             {
-                await _messageBus.Publish(new TelemetrySentMessage
-                {
-                    HiveID = model.HiveID,
-                    Telemetry = model,
-                    IsSuccessfullySent = false
-                });
-                throw new HiveNotFoundException($"Hive not found for id: {model.HiveID}");
+                _logger.LogError("Failed to update Telemetry - Redis update issue. HiveID: {hiveId}, Telemetry model: {@telemetry}", model.HiveID, model);
             }
 
+            await _messageBus.Publish(new TelemetrySentMessage
+            {
+                HiveID = model.HiveID,
+                Telemetry = model,
+                IsSuccessfullySent = result
+            });
+            return model.Timestamp;
         }
 
         public async Task<string> SendHiveControlSignal(string hiveId, Location destination)
@@ -127,33 +124,40 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
             var hive = await GetHiveModel(hiveId);
             if (hive == null)
             {
-                throw new Exception($"Hive control signal error: cannot find hive with id: {hiveId}");
+                _logger.LogError("Sending Hive Control signal: Hive not found for HiveID: {hiveId}", hiveId);
+                return null;
             }
 
             bool isSuccessfullySent = false;
-
+            string hiveMindPath = _communicationControlConfiguration.CurrentValue.HiveMindPath;
+            var command = new MoveHiveMindCommand
+            {
+                CommandType = State.Move,
+                Location = destination,
+                Timestamp = DateTime.Now
+            };
             try
             {
-                var command = new MoveHiveMindCommand
-                {
-                    CommandType = State.Move,
-                    Location = destination,
-                    Timestamp = DateTime.Now
-                };
-
-                var result = await _hiveHttpClient.SendHiveControlCommandAsync(_communicationControlConfiguration.CurrentValue.RequestScheme,
-                    hive.HiveIP, hive.HivePort, _communicationControlConfiguration.CurrentValue.HiveMindPath, command);
+                var result = await _hiveHttpClient.SendHiveControlCommandAsync(hive.HiveSchema, hive.HiveIP, hive.HivePort, hiveMindPath, command);
                 isSuccessfullySent = true;
                 return result;
             }
             finally
             {
-                await _messageBus.Publish(new MoveHiveMessage
+                if (isSuccessfullySent)
                 {
-                    IsSuccessfullySent = isSuccessfullySent,
-                    Destination = destination,
-                    HiveID = hiveId
-                });
+                    await _messageBus.Publish(new MoveHiveMessage
+                    {
+                        IsSuccessfullySent = isSuccessfullySent,
+                        Destination = destination,
+                        HiveID = hiveId
+                    });
+                }
+                else
+                {
+                    _logger.LogError("Failed to send control command for Hive: {@hive}, path: {path}, \n Command: {@command}", hive, hiveMindPath, command);
+                }
+                
             }
         }
 
