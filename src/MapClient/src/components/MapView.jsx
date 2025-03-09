@@ -21,6 +21,7 @@ const MapView = () => {
     const mapRef = useRef(null);
     const vectorLayerRef = useRef(null);
     const initialized = useRef(false);
+    const apiUrl = useRef(null)
     const [hives, setHives] = useState([]);
     const [popup, setPopup] = useState({ visible: false, coords: null });
     const [mouseCoords, setMouseCoords] = useState({ lat: "", lon: "" });
@@ -28,11 +29,17 @@ const MapView = () => {
 
     useEffect(() => {
         const initializeMap = async () => {
+
+            const res = await fetch('/config.json')
+            const data = await res.json()
+
+            apiUrl.current = data.API
+
             if (initialized.current) return;
             initialized.current = true;
 
             try {
-                const center = await fetchCenterCoordinates();
+                const center = await fetchCenterCoordinates(apiUrl.current);
                 if (center) {
                     initMap(center.Latitude, center.Longitude);
                     await fetchAndDrawHives();
@@ -66,7 +73,7 @@ const MapView = () => {
     // Fetch hives and draw them on the map
     const fetchAndDrawHives = async () => {
         try {
-            const data = await fetchHives();
+            const data = await fetchHives(apiUrl.current);
             setHives(data);
             drawHives(data);
         } catch (error) {
@@ -174,7 +181,7 @@ const MapView = () => {
             <Popup 
                 isVisible={popup.visible} 
                 coords={popup.coords} 
-                onConfirm={() => moveHives(popup.coords.lat, popup.coords.lon, hives.map(h => h.id))} 
+                onConfirm={() => moveHives(apiUrl.current, popup.coords.lat, popup.coords.lon, hives.map(h => h.id))} 
                 onCancel={() => setPopup({ visible: false })} 
             />
         </div>
