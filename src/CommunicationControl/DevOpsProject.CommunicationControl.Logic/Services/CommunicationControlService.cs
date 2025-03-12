@@ -1,4 +1,4 @@
-﻿using DevOpsProject.CommunicationControl.Logic.Services.Interfaces;
+using DevOpsProject.CommunicationControl.Logic.Services.Interfaces;
 using DevOpsProject.Shared.Clients;
 using DevOpsProject.Shared.Configuration;
 using DevOpsProject.Shared.Enums;
@@ -65,19 +65,40 @@ namespace DevOpsProject.CommunicationControl.Logic.Services
 
         public async Task<HiveOperationalArea> ConnectHive(HiveModel model)
         {
-            _logger.LogInformation("Trying to connect Hive: {@model}", model);
+            bool isHiveAlreadyConnected = await IsHiveConnected(model.HiveID);
+            if (isHiveAlreadyConnected)
+            {
+                _logger.LogWarning("Reconnect Hive request: {@model}", model);
+            }
+            else
+            {
+                _logger.LogInformation("Trying to connect Hive: {@model}", model);
+            }
             bool result = await _redisService.SetAsync(GetHiveKey(model.HiveID), model);
             if (result)
             {
                 _logger.LogInformation("Successfully connected Hive: {@model}", model);
                 var operationalArea = _spatialService.GetHiveOperationalArea(model);
-                await _messageBus.Publish(new HiveConnectedMessage
+                if (isHiveAlreadyConnected)
                 {
-                    HiveID = model.HiveID,
-                    Hive = model,
-                    InitialOperationalArea = operationalArea,
-                    IsSuccessfullyConnected = result
-                });
+                    await _messageBus.Publish(new HiveReconnectedMessage
+                    {
+                        HiveID = model.HiveID,
+                        Hive = model,
+                        InitialOperationalArea = operationalArea,
+                        IsSuccessfullyReconnected = result
+                    });
+                }
+                else
+                {
+                    await _messageBus.Publish(new HiveConnectedMessage
+                    {
+                        HiveID = model.HiveID,
+                        Hive = model,
+                        InitialOperationalArea = operationalArea,
+                        IsSuccessfullyConnected = result
+                    });
+                }
                 return operationalArea;
             }
             else
