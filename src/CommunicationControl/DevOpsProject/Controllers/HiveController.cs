@@ -30,13 +30,6 @@ namespace DevOpsProject.CommunicationControl.API.Controllers
                 HiveSchema = request.HiveSchema
             };
 
-            bool isConnected = await _communicationControlService.IsHiveConnected(request.HiveID);
-            if (isConnected)
-            {
-                _logger.LogError("Hive with HiveID: {hiveId} already connected. Request: {@request}", request.HiveID, request);
-                return BadRequest($"Hive with HiveID: {request.HiveID} already connected");
-            }
-
             var hiveOperationalArea = await _communicationControlService.ConnectHive(hiveModel);
             var connectResponse = new HiveConnectResponse
             {
