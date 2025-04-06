@@ -44,7 +44,7 @@ dotnet run  --project DevOpsProject/DevOpsProject.CommunicationControl.API.cspro
 ```bash
 cd src/CommunicationControl
 
-dotnet run  --project DevOpsProject/DevOpsProject.HiveMind.API.csproj
+dotnet run  --project DevOpsProject.HiveMind.API/DevOpsProject.HiveMind.API.csproj
 ```
 
 
