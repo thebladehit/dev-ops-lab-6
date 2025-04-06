@@ -64,6 +64,8 @@ dotnet run  --project DevOpsProject/DevOpsProject.HiveMind.API.csproj
 
 ### Map Clinet
 cd src/MapClient
+
+npm install
 npm run build
 
 ### Communiction Control
