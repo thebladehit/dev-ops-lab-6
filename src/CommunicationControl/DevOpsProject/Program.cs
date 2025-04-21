@@ -19,6 +19,8 @@ internal class Program
         // TODO: consider this approach
         builder.Services.AddJsonControllerOptionsConfiguration();
 
+        string basePath = builder.Configuration.GetValue<string>("BasePath") ?? string.Empty;
+        
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
         {
@@ -41,13 +43,26 @@ internal class Program
         builder.Services.AddProblemDetails();
 
         var app = builder.Build();
-
+        if (!string.IsNullOrEmpty(basePath))
+        {
+            var pathBase = new PathString(basePath);
+            app.UsePathBase(pathBase);
+            app.Use(async (context, next) =>
+            {
+                context.Request.PathBase = pathBase;
+                await next();
+            });
+        }
+        
         app.UseExceptionHandler();
 
-        
         app.UseSwagger();
-        app.UseSwaggerUI();
-
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint($"{basePath}/swagger/v1/swagger.json", "CommunicationControl - V1");
+            c.RoutePrefix = $"swagger";
+            
+        });
         app.UseCors(corsPolicyName);
 
         app.UseAuthorization();
