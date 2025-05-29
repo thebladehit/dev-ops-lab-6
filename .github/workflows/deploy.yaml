@@ -5,6 +5,7 @@ on:
     branches:
       - dev
       - main
+  workflow_dispatch:
 
 env:
   AWS_REGION: eu-central-1
