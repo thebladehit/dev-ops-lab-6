@@ -41,13 +41,25 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPO_FRONTEND:latest ./src/MapClient
           docker push $ECR_REGISTRY/$ECR_REPO_FRONTEND:latest
 
+      - name: Set MY_SECRET_URL
+        run: |
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            echo "MY_SECRET_URL=${{ secrets.EC2_PROD_HOST }}" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF}" == "refs/heads/dev" ]]; then
+            echo "MY_SECRET_URL=${{ secrets.EC2_DEV_HOST }}" >> $GITHUB_ENV
+          else
+            echo "MY_SECRET_URL=unknown" >> $GITHUB_ENV
+          fi
+      
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ github.ref == 'refs/heads/main' && secrets.EC2_PROD_HOST || github.ref == 'refs/heads/dev' && secrets.EC2_DEV_HOST }}
+          host: ${{ env.MY_SECRET_URL }}
           username: admin
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/admin/dev/dev-ops-lab-6/src
+            [ -d config.json ] && rm -rf config.json
+            echo "{\"API\": \"http://${{env.MY_SECRET_URL}}:8080/api/v1/client\"}" > config.json
             docker compose pull
             docker compose up -d --remove-orphans

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: com-control
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: com-control
+  template:
+    metadata:
+      labels:
+        app: com-control
+    spec:
+      containers:
+        - name: con-control
+          image: 699475939717.dkr.ecr.eu-central-1.amazonaws.com/kpi-dev-ops-communication-controll:latest
+          ports:
+          - containerPort: 8080
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "10m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          env:
+            - name: Redis__ConnectionString
+              value: redis:6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: com-control
+spec:
+  type: LoadBalancer
+  selector:
+    app: com-control
+  ports:
+  - port: 8080
+    targetPort: 8080
+
+        
