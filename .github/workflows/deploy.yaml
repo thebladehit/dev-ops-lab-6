@@ -45,9 +45,9 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ github.ref == 'refs/heads/main' && secrets.EC2_PROD_HOST || github.ref == 'refs/heads/dev' && secrets.EC2_DEV_HOST }}
-          username: ec2-user
+          username: admin
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/your-project-folder
-            docker-compose pull
-            docker-compose up -d --remove-orphans
+            cd /home/admin/dev/dev-ops-lab-6/src
+            docker compose pull
+            docker compose up -d --remove-orphans
