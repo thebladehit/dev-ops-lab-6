@@ -1,0 +1,19 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY DevOpsProject.HiveMind.API/ ./DevOpsProject.HiveMind.API/
+COPY DevOpsProject.HiveMind.Logic/ ./DevOpsProject.HiveMind.Logic/
+COPY DevOpsProject.Shared/ ./DevOpsProject.Shared/
+
+WORKDIR /src/DevOpsProject.HiveMind.API
+
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+EXPOSE 5149
+ENTRYPOINT ["dotnet", "DevOpsProject.HiveMind.API.dll"]
